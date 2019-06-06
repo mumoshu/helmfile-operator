@@ -1,0 +1,3 @@
+releases:
+- name: podinfo
+  chart: sp/podinfo

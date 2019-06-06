@@ -1,0 +1,20 @@
+apiVersion: apps.mumoshu.github.io/v1alpha1
+kind: Appliance
+metadata:
+  name: myapp
+spec:
+  source: git::https://github.com/mumoshu/appliance-operator//pkg/examplecontroller@assets?ref=master
+  #
+  # # Syntax sugar: The trailing "?ref=master" can be specified alternatively with `version`:
+  # version: master
+  #
+  # # Alternatively specify the container `image` for your own appliance-controller.
+  # # See the README section for `examplecontroller` to see how you can build your own appliance-controller.
+  # image:
+  #   repository: quay.io/examplecom/example
+  #   tag: v1.2.3
+  #
+  values:
+    foo: FOO
+  envvars:
+    bar: BAR

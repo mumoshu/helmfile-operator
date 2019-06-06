@@ -1,0 +1,4 @@
+[submodule "whitebox-controller"]
+	path = whitebox-controller
+	url = git@github.com:mumoshu/whitebox-controller.git
+	branch = go-func-as-handler
