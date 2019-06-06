@@ -1,9 +1,12 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/summerwind/whitebox-controller/config"
 	"github.com/summerwind/whitebox-controller/handler"
+	"github.com/summerwind/whitebox-controller/reconciler"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -13,8 +16,8 @@ func NewController(name string, client client.Client) (*config.ControllerConfig,
 	return &config.ControllerConfig{
 		Name: name,
 		Resource: schema.GroupVersionKind{
-			Group: "apps.mumoshu.github.io",
-			Kind: "Appliance",
+			Group:   "apps.mumoshu.github.io",
+			Kind:    "Appliance",
 			Version: "v1alpha1",
 		},
 		Dependents: []config.DependentConfig{
@@ -44,22 +47,94 @@ func NewController(name string, client client.Client) (*config.ControllerConfig,
 
 type reconciclingHandler struct {
 	name string
-	c client.Client
+	c    client.Client
 }
 
 func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
-	fmt.Fprintf(os.Stderr, "reconciling: %s", string(buf))
-	return nil, nil
+	fmt.Fprintf(os.Stderr, "reconciling: %s\n", string(buf))
+
+	state := reconciler.State{}
+
+	if err := json.Unmarshal(buf, &state); err != nil {
+		return buf, err
+	}
+
+	deployName := fmt.Sprintf("%s-%s", h.name, state.Object.Object["metadata"].(map[string]interface{})["name"])
+
+	if state.Dependents["deployment.v1.apps"] == nil || len(state.Dependents["deployment.v1.apps"]) == 0 {
+		state.Dependents["deployment.v1.apps"] = []*unstructured.Unstructured{
+			&unstructured.Unstructured{
+				Object: map[string]interface{}{
+					"apiVersion": "apps/v1",
+					"kind":       "Deployment",
+					"metadata": map[string]interface{}{
+						"name":      deployName,
+						"namespace": "default",
+					},
+					"spec": map[string]interface{}{
+						"replicas": 1,
+						"selector": map[string]interface{}{
+							"matchLabels": map[string]interface{}{
+								"app": deployName,
+							},
+						},
+						"template": map[string]interface{}{
+							"metadata": map[string]interface{}{
+								"labels": map[string]interface{}{
+									"app": deployName,
+								},
+							},
+							"spec": map[string]interface{}{
+								"containers": []map[string]interface{}{
+									map[string]interface{}{
+										"name":            "helmfile-applier",
+										"command":         []string{"helmfile-applier",},
+										"image":           "mumoshu/helmfile-applier:dev",
+										"imagePullPolicy": "IfNotPresent",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	out, err := json.Marshal(state)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Fprintf(os.Stderr, "new state: %s\n", string(out))
+
+	return out, nil
 }
 
 type finalizingHandler struct {
 	name string
-	c client.Client
+	c    client.Client
 }
 
 func (h *finalizingHandler) Run(buf []byte) ([]byte, error) {
-	fmt.Fprintf(os.Stderr, "finalizing: %s", string(buf))
-	return nil, nil
+	fmt.Fprintf(os.Stderr, "finalizing: %s\n", string(buf))
+
+	state := reconciler.State{}
+
+	if err := json.Unmarshal(buf, &state); err != nil {
+		return buf, err
+	}
+
+	state.Dependents["deployment.v1.apps"] = []*unstructured.Unstructured{}
+
+	out, err := json.Marshal(state)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Fprintf(os.Stderr, "new state: %s\n", string(out))
+
+	return out, nil
 }
 
 func NewReconcilingHandler(name string, c client.Client) handler.Handler {

@@ -3,19 +3,19 @@
 run: TARGET=examplecontroller
 run:
 	rm -rf dist/assets
-	(GO111MODULE=on packr2 build github.com/mumoshu/helmfile-server/pkg/$(TARGET) && mv $(TARGET) ./dist && cd dist && ./$(TARGET))
+	(GO111MODULE=on packr2 build github.com/mumoshu/appliance-operator/pkg/$(TARGET) && mv $(TARGET) ./dist && cd dist && ./$(TARGET))
 
-examplecontroller/run:
-	make run TARGET=examplecontroller
+example-applier/run:
+	make run TARGET=example-applier
 
-genericcontroller/run:
+helmfile-applier/run:
 	rm -rf dist/assets
-	go build -o genericcontroller ./pkg/genericcontroller/cmd && mv genericcontroller ./dist && cd dist && ./genericcontroller
+	go build -o helmfile-applier ./pkg/helmfile-applier/cmd && mv helmfile-applier ./dist && cd dist && ./helmfile-applier
 
-genericoperator/run:
+helmfile-operator/run:
 	rm -rf dist/assets
-	go build -o genericoperator ./pkg/genericoperator/cmd && mv genericoperator ./dist && cd dist && ./genericoperator
+	go build -o helmfile-operator ./pkg/helmfile-operator/cmd && mv helmfile-operator ./dist && cd dist && ./helmfile-operator
 
-applianceoperator/run:
+appliance-operator/run:
 	rm -rf dist/assets
-	go build -o applianceoperator ./pkg/applianceoperator && mv applianceoperator ./dist && cd dist && ./applianceoperator
+	go build -o appliance-operator ./pkg/appliance-operator && mv appliance-operator ./dist && cd dist && ./appliance-operator
