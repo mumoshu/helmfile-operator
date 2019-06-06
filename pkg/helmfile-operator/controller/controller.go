@@ -61,6 +61,8 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 
 	deployName := fmt.Sprintf("%s-%s", h.name, state.Object.Object["metadata"].(map[string]interface{})["name"])
 
+	source := state.Object.Object["spec"].(map[string]interface{})["source"].(string)
+
 	if state.Dependents["deployment.v1.apps"] == nil || len(state.Dependents["deployment.v1.apps"]) == 0 {
 		state.Dependents["deployment.v1.apps"] = []*unstructured.Unstructured{
 			&unstructured.Unstructured{
@@ -88,7 +90,10 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 								"containers": []map[string]interface{}{
 									map[string]interface{}{
 										"name":            "helmfile-applier",
-										"command":         []string{"helmfile-applier",},
+										"command":         []string{
+											"helmfile-applier",
+											"--file", source,
+										},
 										"image":           "mumoshu/helmfile-applier:dev",
 										"imagePullPolicy": "IfNotPresent",
 									},
