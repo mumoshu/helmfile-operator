@@ -1,4 +1,4 @@
-package genericcontroller
+package helmfile_applier
 
 type Option func(runner *Runner) error
 

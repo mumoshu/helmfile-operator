@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mumoshu/helmfile-server/pkg/genericoperator"
+	"github.com/mumoshu/helmfile-server/pkg/helmfile-operator"
 	"os"
 )
 
@@ -13,7 +13,7 @@ func main() {
 
 	flag.Parse()
 
-	if err := genericoperator.Run(*name, *configPath); err != nil {
+	if err := helmfile_operator.Run(*name, *configPath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/mumoshu/helmfile-server/pkg/genericcontroller"
+	"github.com/mumoshu/helmfile-server/pkg/helmfile-applier"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -20,7 +20,7 @@ func main() {
 	flagset.StringVarP(&source, "file", "f", "", "desired state file to be used to reconcile the cluster. currently only helmfile-style state file is supported.")
 	flagset.BoolVar(&once, "once", false, "run once and exit immediately. primarily for testing and development purpose")
 
-	r, err := genericcontroller.New(nil, genericcontroller.Source(source), genericcontroller.Once(once))
+	r, err := helmfile_applier.New(nil, helmfile_applier.Source(source), helmfile_applier.Once(once))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(2)

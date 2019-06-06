@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/mumoshu/helmfile-server/pkg/genericcontroller"
+	"github.com/mumoshu/helmfile-server/pkg/helmfile-applier"
 	"os"
 )
 
@@ -14,10 +14,10 @@ func main() {
 	// in order for `packr2 build` to successfully determine the directory to be packed
 	box := packr.New("Bundled Addon Assets", assetsDir)
 
-	r, err := genericcontroller.New(
+	r, err := helmfile_applier.New(
 		box,
-		genericcontroller.AssetDir(assetsDir),
-		genericcontroller.Source("assets/helmfile.yaml"),
+		helmfile_applier.AssetDir(assetsDir),
+		helmfile_applier.Source("assets/helmfile.yaml"),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)

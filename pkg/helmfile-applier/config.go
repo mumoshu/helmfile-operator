@@ -1,4 +1,4 @@
-package genericcontroller
+package helmfile_applier
 
 import (
 	"github.com/roboll/helmfile/pkg/app"

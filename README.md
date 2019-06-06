@@ -101,10 +101,10 @@ An `appliance` is composed of one or more K8s resources.
  
 `consumer` is the user of the appliance. An `appliance` surface a single U/X to manage the appliance as a whole, so that `consumer` is able to operate on the `appliance`, rather than on underlying K8s resources.
 
-`appliance-controller` periodically reconcile the k8s cluster so that the appliance keeps running.
-This project aims to provide (1) generic `appliance-controller` and (2) the framework for building your own `appliance-controller` and `appliance-operator`.
+`applier` periodically reconcile the k8s cluster so that the appliance keeps running.
+This project aims to provide (1) generic `applier` and (2) the framework for building your own `applier` and `appliance-operator`.
 
-`generic-appliance-controller` is the only `appliance-controller` that is maintained in this project.
+`helmfile-applier` is the only `applier` that is maintained in this project. `example-applier` is an example applier that shows how to build your own applier based on `helmfile-applier`.
 
 `appliance-operator` watches for `Appliance` custom resources so that it can reconcile the k8s cluster to have corresponding `appliance-controller` up and running.
 
@@ -114,34 +114,36 @@ There are 1 main project and 2 related projects maintained within this project.
 
 See respective directory under the `pkg` directory for more details.
 
-### `applianceoperator`
+### `appliance-operator`
 
-This is the standard impelmentation of `appliance-operator`.
+This is the example impelmentation of your own `appliance-operator`.
 
-It is based on the `genericoperator`, and has the additional ability to automatically register the `Appliance` CRD on startup.
+It is based on the `helmfile-operator`, and has the additional ability to automatically register the `Appliance` CRD on startup.
 
 It's configuration can be customized via the changing the bundled `assets/config.yaml`, or mouting an alternative config file and pointing the operator to load that by providing the `--file CONFIG_FILE` flag.
 
 For settings available in `config.yaml`, see the documentation of [whitebox-controller](https://github.com/summerwind/whitebox-controller/blob/master/docs/configuration.md) which is the foundation of the operator.
 
-### `genericoperator`
+### `helmfile-operator`
 
 This is a generic implementation of the `appliance-operator` which is deployed onto a runtime environment that has connectivity to K8s API.
 
-By contacting K8s API, it watches `Appliance` custom resources for changes and updates and removes the `Deployment` that runs the `genericcontroller`.
+By contacting K8s API, it watches `Appliance` custom resources for changes and updates and removes the `Deployment` that runs the `helmfile-applier`.
 
 See [The "Appliance" custom resource](#The "Appliance" custom resource) for details of the `Appliance` resource.
 
-### genericcontroller
+### helmfile-applier
 
-This is a generic `appliance-controller` that is deployed as a container image.
+This is a generic `applier` that is deployed as a container image.
 
-You add the state file for the appliance into the container image so that `genericcontroller` loads it on startup. After that it periodically runs [helmfile](https://github.com/roboll/helmfile) to reconcile the cluster state so that
+You add the state file for the appliance into the container image so that `helmfile-applier` loads it on startup. After that it periodically runs [helmfile](https://github.com/roboll/helmfile) to reconcile the cluster state so that
 the desired appliance is kept up and running.
 
-### examplecontroller
+### example-applier
 
-This is an example `appliance-controller` that is implemented by extending `genericcontroller`.
+Use-cases: Air-gapped deployments (By containerizing all the appliance assets)
+
+This is an example `applier` that is implemented by extending `helmfile-applier`.
 
 It bundles the state file for the appliance into the executable binary with [packr2](https://github.com/gobuffalo/packr).
 
@@ -150,7 +152,7 @@ the desired appliance is kept up and running.
 
 ## Advanced: Building your own Appliance operator
 
-TL;DR; Use `genericoperator` as a framework for your own `appliance-operator`.
+TL;DR; Use `helmfile-operator` as a framework and `appliance-operator` as the reference implementation for building your own operator.
 
 > **For advanced-usecases**
 > 
@@ -158,4 +160,10 @@ TL;DR; Use `genericoperator` as a framework for your own `appliance-operator`.
 
 ## Related projects
 
-Under the hood, `appliance-operator` uses [helm-x](https://github.com/mumoshu/helm-x) for transparent support for any K8s manifests renderer/builder.
+Under the hood, `appliance-operator` uses: 
+
+- [helmfile](https://github.com/roboll/helmfile) for declaratively manage and deploy appliances onto your cluster.
+- [helm-x](https://github.com/mumoshu/helm-x) for transparent support for any K8s manifests renderer/builder.
+- [kustomize](https://github.com/kubernetes-sigs/kustomize) for JIT patching your K8s manifests or helm charts contained in the appliance.
+- [helm](https://github.com/helm/helm/) for installing, upgrading your appliance
+- [helm-diff](https://github.com/databus23/helm-diff) for reviewing changes before actually updating the cluster state.

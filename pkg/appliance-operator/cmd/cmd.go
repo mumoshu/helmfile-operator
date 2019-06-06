@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/mumoshu/helmfile-server/pkg/apputil"
-	"github.com/mumoshu/helmfile-server/pkg/genericoperator"
+	"github.com/mumoshu/helmfile-server/pkg/helmfile-operator"
 	"os"
 )
 
@@ -37,7 +37,14 @@ func Run() {
 		os.Exit(1)
 	}
 
-	if err := genericoperator.Run(*name, *configPath); err != nil {
+	out, err := apputil.RunCommand("kubectl", "apply", "-f", "assets/init")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Fprintf(os.Stderr, "Apply sucecssful: %s\n", out)
+
+	if err := helmfile_operator.Run(*name, *configPath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

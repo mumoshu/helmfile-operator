@@ -1,8 +1,8 @@
-package genericoperator
+package helmfile_operator
 
 import (
 	"fmt"
-	"github.com/mumoshu/helmfile-server/pkg/genericoperator/controller"
+	"github.com/mumoshu/helmfile-server/pkg/helmfile-operator/controller"
 	config2 "github.com/summerwind/whitebox-controller/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

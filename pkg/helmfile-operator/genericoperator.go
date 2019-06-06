@@ -1,4 +1,4 @@
-package genericoperator
+package helmfile_operator
 
 import (
 	"fmt"
