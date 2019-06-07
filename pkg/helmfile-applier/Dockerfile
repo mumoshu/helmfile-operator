@@ -4,16 +4,18 @@ ADD . /helmfile-applier
 
 WORKDIR /helmfile-applier
 
-RUN GO111MODULES=on CGO_ENABLED=1 go build --mod=vendor -o helmfile-applier ./cmd
+RUN GO111MODULES=on CGO_ENABLED=0 go build --mod=vendor -o helmfile-applier ./cmd
 
 RUN find /helmfile-applier
 
-RUN ./helmfile-applier -v
+RUN ./helmfile-applier -h
 
 FROM quay.io/roboll/helmfile:v0.73.1
 
 COPY --from=build /helmfile-applier/helmfile-applier /usr/local/bin/
 
 RUN find /usr/local/bin/
+
+RUN /usr/local/bin/helmfile-applier -h
 
 CMD /usr/local/bin/helmfile-applier

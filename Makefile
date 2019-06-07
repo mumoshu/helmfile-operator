@@ -1,3 +1,7 @@
+deps:
+	GO111MODULES=off go get -u github.com/gobuffalo/packr/v2/packr2
+
+
 # vgo needs to be enabled explicitly in packr2
 # see https://github.com/gobuffalo/packr/issues/113
 run: TARGET=examplecontroller

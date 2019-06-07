@@ -8,8 +8,10 @@ import (
 )
 
 func main() {
+	name := "helmfile-applier"
+
 	cmd := &cobra.Command{
-		Use: "genericcontroller [flags]",
+		Use: fmt.Sprintf("%s [flags]", name),
 	}
 
 	flagset := cmd.PersistentFlags()
@@ -22,19 +24,22 @@ func main() {
 	flagset.StringVarP(&environment, "environment", "e", "", "helmfile environment name to be specified for deployments")
 	flagset.BoolVar(&once, "once", false, "run once and exit immediately. primarily for testing and development purpose")
 
-	r, err := helmfile_applier.New(
-		nil,
-		helmfile_applier.Source(source),
-		helmfile_applier.Once(once),
-		helmfile_applier.Environment(environment),
-	)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(2)
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		r, err := helmfile_applier.New(
+			nil,
+			helmfile_applier.Source(source),
+			helmfile_applier.Once(once),
+			helmfile_applier.Environment(environment),
+		)
+		if err != nil {
+			return err
+		}
+
+		return r.Run()
 	}
 
-	if err := r.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "genericcontroller exiting: %v", err)
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s exiting: %v", name, err)
 		os.Exit(1)
 	}
 }
