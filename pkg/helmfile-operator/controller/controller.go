@@ -50,6 +50,8 @@ type reconciclingHandler struct {
 	c    client.Client
 }
 
+const DefaultImageTag = "mumoshu/helmfile-applier:dev"
+
 func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	fmt.Fprintf(os.Stderr, "reconciling: %s\n", string(buf))
 
@@ -61,9 +63,22 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 
 	deployName := fmt.Sprintf("%s-%s", h.name, state.Object.Object["metadata"].(map[string]interface{})["name"])
 
-	source := state.Object.Object["spec"].(map[string]interface{})["source"].(string)
+	objectSpec := state.Object.Object["spec"].(map[string]interface{})
+	dependentDeploys := state.Dependents["deployment.v1.apps"]
 
-	if state.Dependents["deployment.v1.apps"] == nil || len(state.Dependents["deployment.v1.apps"]) == 0 {
+	source := objectSpec["source"].(string)
+
+	if dependentDeploys == nil || len(dependentDeploys) == 0 {
+		var imageTag string
+
+		if _, ok := objectSpec["image"]; ok {
+			image := objectSpec["image"].(map[string]interface{})
+			repo := image["repository"].(string)
+			tag := image["tag"].(string)
+			imageTag = fmt.Sprintf("%s:%s", repo, tag)
+		} else {
+			imageTag = DefaultImageTag
+		}
 		state.Dependents["deployment.v1.apps"] = []*unstructured.Unstructured{
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
@@ -94,7 +109,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 											"helmfile-applier",
 											"--file", source,
 										},
-										"image":           "mumoshu/helmfile-applier:dev",
+										"image":           imageTag,
 										"imagePullPolicy": "IfNotPresent",
 									},
 								},
