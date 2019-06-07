@@ -167,3 +167,4 @@ Under the hood, `appliance-operator` uses:
 - [kustomize](https://github.com/kubernetes-sigs/kustomize) for JIT patching your K8s manifests or helm charts contained in the appliance.
 - [helm](https://github.com/helm/helm/) for installing, upgrading your appliance
 - [helm-diff](https://github.com/databus23/helm-diff) for reviewing changes before actually updating the cluster state.
+- [whitebox-controller](https://github.com/summerwind/whitebox-controller) as the framework for building the rock-solid appliance-operator that is customizable via config files and shell scripts.
