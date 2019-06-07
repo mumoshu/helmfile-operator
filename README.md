@@ -46,6 +46,15 @@ spec:
           properties:
             source:
               type: string
+            version:
+              type: string
+            image:
+              type: object
+              properties:
+                repository:
+                  type: string
+                tag:
+                  type: string
             values:
               type: object
             envvars:
