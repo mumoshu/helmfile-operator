@@ -1,8 +1,9 @@
 package helmfile_applier
 
 import (
+	"fmt"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/mumoshu/helmfile-server/pkg/apputil"
+	"github.com/mumoshu/appliance-operator/pkg/apputil"
 	"github.com/roboll/helmfile/pkg/app"
 	"github.com/stefanprodan/k8s-podinfo/pkg/signals"
 	"go.uber.org/zap"
@@ -16,16 +17,32 @@ type Runner struct {
 
 	syncer *apputil.Syncer
 
+	config    *Config
+	diffConf  DiffConfig
+	applyConf ApplyConfig
+
 	assetsDir string
 	interval  time.Duration
 	once      bool
-	source    string
 	synced    bool
 }
 
 func New(box *packr.Box, opts ...Option) (*Runner, error) {
+	l := apputil.NewLogger(os.Stderr, "debug")
+
 	r := &Runner{
-		interval:  10 * time.Second,
+		interval: 10 * time.Second,
+		diffConf: DiffConfig{
+			detailedExitcode: true,
+		},
+		applyConf: ApplyConfig{
+			logger: l,
+		},
+		config: &Config{
+			logger: l,
+			env:    "default",
+		},
+		assetsDir: "assets",
 	}
 
 	for i := range opts {
@@ -34,12 +51,12 @@ func New(box *packr.Box, opts ...Option) (*Runner, error) {
 		}
 	}
 
-	l := apputil.NewLogger(os.Stderr, "debug")
-	assetsDir := "assets"
+	r.config.fileOrDir = fmt.Sprintf("%s/helmfile.yaml", r.assetsDir)
+
 	syncer, err := apputil.New(
 		apputil.Box(box),
 		apputil.Logger(l),
-		apputil.Assets(assetsDir),
+		apputil.Assets(r.assetsDir),
 	)
 	if err != nil {
 		return nil, err
@@ -60,25 +77,14 @@ func (r *Runner) RunOnce() error {
 
 	logger := r.logger
 
-	config := &Config{
-		fileOrDir: r.source,
-		logger:    logger,
-		env:       "default",
-	}
-	helmfile := app.New(config)
-	diffConf := DiffConfig{
-		detailedExitcode: true,
-	}
-	applyConf := ApplyConfig{
-		logger: logger,
-	}
-	if err := helmfile.Diff(diffConf); err != nil {
+	helmfile := app.New(r.config)
+	if err := helmfile.Diff(r.diffConf); err != nil {
 		switch e := err.(type) {
 		case *app.Error:
 			if e.Code() == 2 {
 				logger.Info("Changes detected. Applying...")
 
-				if err2 := helmfile.Apply(applyConf); err2 != nil {
+				if err2 := helmfile.Apply(r.applyConf); err2 != nil {
 					return err2
 				}
 

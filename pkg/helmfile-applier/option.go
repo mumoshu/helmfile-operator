@@ -11,7 +11,7 @@ func AssetDir(d string) Option {
 
 func Source(s string) Option {
 	return func(r *Runner) error {
-		r.source = s
+		r.config.fileOrDir = s
 		return nil
 	}
 }
@@ -19,6 +19,13 @@ func Source(s string) Option {
 func Once(b bool) Option {
 	return func(r *Runner) error {
 		r.once = b
+		return nil
+	}
+}
+
+func Environment(e string) Option {
+	return func(r *Runner) error {
+		r.config.env = e
 		return nil
 	}
 }

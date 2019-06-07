@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mumoshu/helmfile-server/pkg/helmfile-operator"
+	"github.com/mumoshu/appliance-operator/pkg/helmfile-operator"
 	"os"
 )
 

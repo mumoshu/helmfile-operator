@@ -66,7 +66,53 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	objectSpec := state.Object.Object["spec"].(map[string]interface{})
 	dependentDeploys := state.Dependents["deployment.v1.apps"]
 
-	source := objectSpec["source"].(string)
+	command := "helmfile-applier"
+	if v, ok := objectSpec["command"]; ok {
+		cmd := v.(string)
+		if cmd != "" {
+			command = cmd
+		}
+	}
+
+	args := []string{
+		command,
+	}
+
+	env := []map[string]interface{}{}
+
+	var source string
+	if v, ok := objectSpec["source"]; ok {
+		source = v.(string)
+		if source != "" {
+			args = append(args, "--file", source)
+		}
+	}
+
+	var values map[string]interface{}
+	if v, ok := objectSpec["values"]; ok {
+		values = v.(map[string]interface{})
+		for path, val := range values {
+			args = append(args, "--set", fmt.Sprintf("%s=%s", path, val))
+		}
+	}
+
+	var environment string
+	if v, ok := objectSpec["environment"]; ok {
+		environment = v.(string)
+
+		args = append(args, "--environment", environment)
+	}
+
+	var envvars map[string]interface{}
+	if v, ok := objectSpec["envvars"]; ok {
+		envvars = v.(map[string]interface{})
+		for name, val := range envvars {
+			env = append(env, map[string]interface{}{
+				"name": name,
+				"value": val,
+			})
+		}
+	}
 
 	if dependentDeploys == nil || len(dependentDeploys) == 0 {
 		var imageTag string
@@ -79,6 +125,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 		} else {
 			imageTag = DefaultImageTag
 		}
+		// TODO Use https://github.com/kubernetes-sigs/kubebuilder-declarative-pattern/blob/master/pkg/patterns/declarative/pkg/manifest/objects.go
 		state.Dependents["deployment.v1.apps"] = []*unstructured.Unstructured{
 			&unstructured.Unstructured{
 				Object: map[string]interface{}{
@@ -105,12 +152,10 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 								"containers": []map[string]interface{}{
 									map[string]interface{}{
 										"name":            "helmfile-applier",
-										"command":         []string{
-											"helmfile-applier",
-											"--file", source,
-										},
+										"command":         args,
 										"image":           imageTag,
 										"imagePullPolicy": "IfNotPresent",
+										"env":             env,
 									},
 								},
 							},

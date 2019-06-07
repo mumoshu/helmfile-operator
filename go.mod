@@ -1,4 +1,4 @@
-module github.com/mumoshu/helmfile-server
+module github.com/mumoshu/appliance-operator
 
 go 1.12
 

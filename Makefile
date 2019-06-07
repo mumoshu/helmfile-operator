@@ -3,7 +3,7 @@
 run: TARGET=examplecontroller
 run:
 	rm -rf dist/assets
-	(GO111MODULE=on packr2 build github.com/mumoshu/appliance-operator/pkg/$(TARGET) && mv $(TARGET) ./dist && cd dist && ./$(TARGET))
+	(GO111MODULES=on packr2 build github.com/mumoshu/appliance-operator/pkg/$(TARGET) && mv $(TARGET) ./dist && cd dist && ./$(TARGET))
 
 example-applier/run:
 	make run TARGET=example-applier

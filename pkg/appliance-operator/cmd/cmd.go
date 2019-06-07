@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/mumoshu/helmfile-server/pkg/apputil"
-	"github.com/mumoshu/helmfile-server/pkg/helmfile-operator"
+	"github.com/mumoshu/appliance-operator/pkg/apputil"
+	"github.com/mumoshu/appliance-operator/pkg/helmfile-operator"
 	"os"
 )
 
