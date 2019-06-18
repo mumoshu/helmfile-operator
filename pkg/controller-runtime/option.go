@@ -1,4 +1,4 @@
-package helmfile_operator
+package controller_runtime
 
 import (
 	"github.com/go-logr/logr"

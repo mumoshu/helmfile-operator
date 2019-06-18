@@ -1,8 +1,8 @@
-package helmfile_operator
+package controller_runtime
 
 import (
 	"fmt"
-	"github.com/mumoshu/appliance-operator/pkg/helmfile-operator/controller"
+	"github.com/mumoshu/helmfile-operator/pkg/controller-runtime/controller"
 	config2 "github.com/summerwind/whitebox-controller/config"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

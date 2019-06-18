@@ -1,9 +1,9 @@
 apiVersion: apps.mumoshu.github.io/v1alpha1
-kind: Appliance
+kind: Helmfile
 metadata:
   name: myapp
 spec:
-  source: git::https://github.com/mumoshu/appliance-operator//pkg/examplecontroller@assets?ref=master
+  source: git::https://github.com/mumoshu/helmfile-operator//pkg/examplecontroller@assets?ref=master
   #
   # # Syntax sugar: The trailing "?ref=master" can be specified alternatively with `version`:
   # version: master

@@ -1,4 +1,4 @@
-module github.com/mumoshu/appliance-operator
+module github.com/mumoshu/helmfile-operator
 
 go 1.12
 

@@ -1,4 +1,4 @@
-module github.com/mumoshu/appliance-operator/pkg/helmfile-applier
+module github.com/mumoshu/helmfile-operator/pkg/helmfile-applier
 
 go 1.12
 
@@ -15,7 +15,7 @@ require (
 	github.com/kisielk/errcheck v1.2.0 // indirect
 	github.com/kr/pty v1.1.4 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
-	github.com/mumoshu/appliance-operator v0.0.0-20190607015620-92d67e3c4908
+	github.com/mumoshu/helmfile-operator v0.0.0-20190618020232-749c7de4d3a3
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/prometheus/common v0.4.1 // indirect
 	github.com/prometheus/procfs v0.0.2 // indirect
@@ -47,4 +47,4 @@ require (
 	honnef.co/go/tools v0.0.0-20190607002114-91b34a6dad6c // indirect
 )
 
-replace github.com/mumoshu/appliance-operator => ../../
+replace github.com/mumoshu/helmfile-operator => ../../

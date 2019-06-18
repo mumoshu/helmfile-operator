@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/mumoshu/appliance-operator/pkg/apputil"
-	"github.com/mumoshu/appliance-operator/pkg/helmfile-operator"
+	"github.com/mumoshu/helmfile-operator/pkg/apputil"
+	"github.com/mumoshu/helmfile-operator/pkg/controller-runtime"
 	"os"
 )
 
@@ -27,7 +27,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	var name = flag.String("name", "appliance-operator", "Operator name included in log messages")
+	var name = flag.String("name", "helmfile-operator", "Operator name included in log messages")
 	var configPath = flag.String("config", "", "Path to configuration file")
 
 	flag.Parse()
@@ -44,7 +44,7 @@ func Run() {
 	}
 	fmt.Fprintf(os.Stderr, "Apply sucecssful: %s\n", out)
 
-	if err := helmfile_operator.Run(*name, *configPath); err != nil {
+	if err := controller_runtime.Run(*name, *configPath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

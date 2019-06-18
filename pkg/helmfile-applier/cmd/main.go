@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/mumoshu/appliance-operator/pkg/helmfile-applier"
+	"github.com/mumoshu/helmfile-operator/pkg/helmfile-applier"
 	"github.com/spf13/cobra"
 	"os"
 )

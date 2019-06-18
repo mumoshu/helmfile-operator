@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/mumoshu/appliance-operator/pkg/helmfile-applier"
+	"github.com/mumoshu/helmfile-operator/pkg/helmfile-applier"
 	"os"
 )
 

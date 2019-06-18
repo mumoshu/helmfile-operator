@@ -7,7 +7,7 @@ deps:
 run: TARGET=examplecontroller
 run:
 	rm -rf dist/assets
-	(GO111MODULES=on packr2 build github.com/mumoshu/appliance-operator/pkg/$(TARGET) && mv $(TARGET) ./dist && cd dist && ./$(TARGET))
+	(GO111MODULES=on packr2 build github.com/mumoshu/helmfile-operator/pkg/$(TARGET) && mv $(TARGET) ./dist && cd dist && ./$(TARGET))
 
 example-applier/run:
 	make run TARGET=example-applier
@@ -16,10 +16,15 @@ helmfile-applier/run:
 	rm -rf dist/assets
 	go build -o helmfile-applier ./pkg/helmfile-applier/cmd && mv helmfile-applier ./dist && cd dist && ./helmfile-applier
 
+controller-runtime/run:
+	rm -rf dist/assets
+	go build -o controller-runtime ./pkg/controller-runtime/cmd && mv controller-runtime ./dist && cd dist && ./controller-runtime
+
 helmfile-operator/run:
 	rm -rf dist/assets
-	go build -o helmfile-operator ./pkg/helmfile-operator/cmd && mv helmfile-operator ./dist && cd dist && ./helmfile-operator
+	go build -o helmfile-operator ./pkg/helmfile-operator && mv helmfile-operator ./dist && cd dist && ./helmfile-operator
 
-appliance-operator/run:
-	rm -rf dist/assets
-	go build -o appliance-operator ./pkg/appliance-operator && mv appliance-operator ./dist && cd dist && ./appliance-operator
+build:
+	go build -o helmfile-operator ./pkg/helmfile-operator
+	go build -o controller-runtime ./pkg/controller-runtime/cmd
+	go build -o helmfile-applier ./pkg/helmfile-applier/cmd

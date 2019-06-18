@@ -3,7 +3,7 @@ package helmfile_applier
 import (
 	"fmt"
 	"github.com/gobuffalo/packr/v2"
-	"github.com/mumoshu/appliance-operator/pkg/apputil"
+	"github.com/mumoshu/helmfile-operator/pkg/apputil"
 	"github.com/roboll/helmfile/pkg/app"
 	"github.com/stefanprodan/k8s-podinfo/pkg/signals"
 	"go.uber.org/zap"
