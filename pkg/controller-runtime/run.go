@@ -3,7 +3,7 @@ package controller_runtime
 import (
 	"fmt"
 	"github.com/mumoshu/helmfile-operator/pkg/controller-runtime/controller"
-	config2 "github.com/summerwind/whitebox-controller/config"
+	whiteboxctlr "github.com/summerwind/whitebox-controller/config"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -11,32 +11,59 @@ import (
 )
 
 type Runtime struct {
-	resource schema.GroupVersionKind
+	source, image, config string
 }
 
+type Opt func(r *Runtime) error
 
-func Run(name string, resource schema.GroupVersionKind, o ...string) error {
+func Source(s string) Opt {
+	return func(r *Runtime) error {
+		r.source = s
+		return nil
+	}
+}
+func Image(s string) Opt {
+	return func(r *Runtime) error {
+		r.image = s
+		return nil
+	}
+}
+func Conf(s string) Opt {
+	return func(r *Runtime) error {
+		r.config = s
+		return nil
+	}
+}
+
+func Run(name string, resource schema.GroupVersionKind, opt ...Opt) error {
+	r := &Runtime{}
+	for _, o := range opt {
+		if err := o(r); err != nil {
+			return err
+		}
+	}
+
 	log2.SetLogger(log2.ZapLogger(false))
 	log := log2.Log.WithName(name)
 
 	var configPath string
-	if len(o) > 0 {
-		configPath = o[0]
+	if r.config != "" {
+		configPath = r.config
 	}
 	kc, err := config.GetConfig()
 	if err != nil {
 		return fmt.Errorf("could not load kubernetes configuration: %v", err)
 	}
 
-	var c *config2.Config
+	var c *whiteboxctlr.Config
 
 	if configPath != "" {
-		c, err = config2.LoadFile(configPath)
+		c, err = whiteboxctlr.LoadFile(configPath)
 		if err != nil {
 			return fmt.Errorf("could not load configuration file: %v", err)
 		}
 	} else {
-		c = &config2.Config{}
+		c = &whiteboxctlr.Config{}
 	}
 
 	opts := manager.Options{}
@@ -49,7 +76,7 @@ func Run(name string, resource schema.GroupVersionKind, o ...string) error {
 		return fmt.Errorf("could not create manager: %v", err)
 	}
 
-	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient())
+	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient(), r.source, r.image)
 	if err != nil {
 		return fmt.Errorf("cloud not create controller config: %v", err)
 	}

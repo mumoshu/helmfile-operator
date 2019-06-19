@@ -12,9 +12,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewController(name string, resource schema.GroupVersionKind, client client.Client) (*config.ControllerConfig, error) {
+func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image string) (*config.ControllerConfig, error) {
 	return &config.ControllerConfig{
-		Name: name,
+		Name:     name,
 		Resource: resource,
 		Dependents: []config.DependentConfig{
 			{
@@ -29,7 +29,7 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 		Reconciler: &config.ReconcilerConfig{
 			HandlerConfig: config.HandlerConfig{
 				Func: &config.FuncHandlerConfig{
-					Handler: NewReconcilingHandler(name, client),
+					Handler: NewReconcilingHandler(name, client, source, image),
 				},
 			},
 		},
@@ -42,8 +42,9 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 }
 
 type reconciclingHandler struct {
-	name string
-	c    client.Client
+	name          string
+	c             client.Client
+	source, image string
 }
 
 const DefaultImageTag = "mumoshu/helmfile-applier:dev"
@@ -79,9 +80,11 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	var source string
 	if v, ok := objectSpec["source"]; ok {
 		source = v.(string)
-		if source != "" {
-			args = append(args, "--file", source)
-		}
+	} else if h.source != "" {
+		source = h.source
+	}
+	if source != "" {
+		args = append(args, "--file", source)
 	}
 
 	var values map[string]interface{}
@@ -104,7 +107,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 		envvars = v.(map[string]interface{})
 		for name, val := range envvars {
 			env = append(env, map[string]interface{}{
-				"name": name,
+				"name":  name,
 				"value": val,
 			})
 		}
@@ -118,9 +121,12 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			repo := image["repository"].(string)
 			tag := image["tag"].(string)
 			imageTag = fmt.Sprintf("%s:%s", repo, tag)
+		} else if h.image != "" {
+			imageTag = h.image
 		} else {
 			imageTag = DefaultImageTag
 		}
+
 		// TODO Use https://github.com/kubernetes-sigs/kubebuilder-declarative-pattern/blob/master/pkg/patterns/declarative/pkg/manifest/objects.go
 		state.Dependents["deployment.v1.apps"] = []*unstructured.Unstructured{
 			&unstructured.Unstructured{
@@ -198,8 +204,13 @@ func (h *finalizingHandler) Run(buf []byte) ([]byte, error) {
 	return out, nil
 }
 
-func NewReconcilingHandler(name string, c client.Client) handler.Handler {
-	return &reconciclingHandler{name: name, c: c}
+func NewReconcilingHandler(name string, c client.Client, source, image string) handler.Handler {
+	return &reconciclingHandler{
+		name:   name,
+		c:      c,
+		source: source,
+		image:  image,
+	}
 }
 
 func NewFinalizingHandler(name string, c client.Client) handler.Handler {

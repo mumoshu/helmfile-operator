@@ -19,7 +19,7 @@ func main() {
 		Kind:    "Appliance",
 		Version: "v1alpha1",
 	}
-	if err := controller_runtime.Run(*name, resource, *configPath); err != nil {
+	if err := controller_runtime.Run(*name, resource, controller_runtime.Conf(*configPath)); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
