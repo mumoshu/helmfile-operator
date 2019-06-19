@@ -12,10 +12,20 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy string) (*config.ControllerConfig, error) {
+func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy, sshKeySecret string) (*config.ControllerConfig, error) {
 	if imagePullPolicy == "" {
 		imagePullPolicy = "IfNotPresent"
 	}
+
+	h := &reconciclingHandler{
+		name:            name,
+		c:               client,
+		source:          source,
+		image:           image,
+		imagePullPolicy: imagePullPolicy,
+		sshKeySecret:    sshKeySecret,
+	}
+
 	return &config.ControllerConfig{
 		Name:     name,
 		Resource: resource,
@@ -32,7 +42,7 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 		Reconciler: &config.ReconcilerConfig{
 			HandlerConfig: config.HandlerConfig{
 				Func: &config.FuncHandlerConfig{
-					Handler: NewReconcilingHandler(name, client, source, image, imagePullPolicy),
+					Handler: h,
 				},
 			},
 		},
@@ -49,6 +59,7 @@ type reconciclingHandler struct {
 	c               client.Client
 	source, image   string
 	imagePullPolicy string
+	sshKeySecret    string
 }
 
 const DefaultImageTag = "mumoshu/helmfile-applier:dev"
@@ -128,6 +139,26 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 		}
 	}
 
+	volumes := []map[string]interface{}{}
+	volumeMounts := []map[string]interface{}{}
+
+	if h.sshKeySecret != "" {
+		mount := map[string]interface{}{
+			// TODO
+			"name":      "dot-ssh",
+			"mountPath": "/root/.ssh",
+		}
+		volume := map[string]interface{}{
+			"name": "dot-ssh",
+			"secret": map[string]interface{}{
+				"secretName":  h.sshKeySecret,
+				"defaultMode": "500",
+			},
+		}
+		volumes = append(volumes, volume)
+		volumeMounts = append(volumeMounts, mount)
+	}
+
 	if dependentDeploys == nil || len(dependentDeploys) == 0 {
 		var imageTag string
 
@@ -173,8 +204,10 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 										"image":           imageTag,
 										"imagePullPolicy": h.imagePullPolicy,
 										"env":             env,
+										"volumeMounts":    volumeMounts,
 									},
 								},
+								"volumes": volumes,
 							},
 						},
 					},
@@ -217,16 +250,6 @@ func (h *finalizingHandler) Run(buf []byte) ([]byte, error) {
 	fmt.Fprintf(os.Stderr, "new state: %s\n", string(out))
 
 	return out, nil
-}
-
-func NewReconcilingHandler(name string, c client.Client, source, image, imagePullPolicy string) handler.Handler {
-	return &reconciclingHandler{
-		name:            name,
-		c:               c,
-		source:          source,
-		image:           image,
-		imagePullPolicy: imagePullPolicy,
-	}
 }
 
 func NewFinalizingHandler(name string, c client.Client) handler.Handler {
