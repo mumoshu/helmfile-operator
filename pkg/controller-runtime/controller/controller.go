@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy, sshKeySecret string, helmX bool) (*config.ControllerConfig, error) {
+func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy, sshKeySecret, homeConfigMap string, helmX bool) (*config.ControllerConfig, error) {
 	if imagePullPolicy == "" {
 		imagePullPolicy = "IfNotPresent"
 	}
@@ -25,6 +25,7 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 		imagePullPolicy: imagePullPolicy,
 		sshKeySecret:    sshKeySecret,
 		helmX:           helmX,
+		homeConfigMap:   homeConfigMap,
 	}
 
 	return &config.ControllerConfig{
@@ -61,6 +62,7 @@ type reconciclingHandler struct {
 	source, image   string
 	imagePullPolicy string
 	sshKeySecret    string
+	homeConfigMap   string
 
 	helmX bool
 }
@@ -150,6 +152,46 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	primaryContainerMounts := []map[string]interface{}{}
 	initContainers := []map[string]interface{}{}
 
+	if h.homeConfigMap != "" {
+		home_mount := map[string]interface{}{
+			"name": "home",
+			"mountPath": "/root",
+		}
+		configmap_home_mount := map[string]interface{}{
+			"name":      "configmap-home",
+			"mountPath": "/configmaps/home",
+		}
+		home_volume := map[string]interface{}{
+			"name":     "home",
+			"emptyDir": map[string]interface{}{},
+		}
+		configmap_home_volume := map[string]interface{}{
+			"name": "configmap-home",
+			"configMap": map[string]interface{}{
+				"name": h.homeConfigMap,
+			},
+		}
+
+		volumes = append(volumes, configmap_home_volume, home_volume)
+		primaryContainerMounts = append(primaryContainerMounts, home_mount, configmap_home_mount)
+
+		homeInit := map[string]interface{}{
+			"name":  "ssh-key",
+			"image": "busybox:1.31.0",
+			"command": []string{
+				"sh",
+				"-ce",
+				"mkdir -p /root && cp -R /configmaps/home/* /root/",
+			},
+			"volumeMounts": []map[string]interface{}{
+				home_mount,
+				configmap_home_mount,
+			},
+		}
+
+		initContainers = append(initContainers, homeInit)
+	}
+
 	if h.sshKeySecret != "" {
 		dot_ssh_mount := map[string]interface{}{
 			"name": "dot-ssh",
@@ -175,7 +217,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 
 		primaryContainerMounts = append(primaryContainerMounts, dot_ssh_mount)
 
-		initContainer := map[string]interface{}{
+		dotSshInit := map[string]interface{}{
 			"name":  "ssh-key",
 			"image": "busybox:1.31.0",
 			"command": []string{
@@ -190,7 +232,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			},
 		}
 
-		initContainers = append(initContainers, initContainer)
+		initContainers = append(initContainers, dotSshInit)
 	}
 
 	if dependentDeploys == nil || len(dependentDeploys) == 0 {

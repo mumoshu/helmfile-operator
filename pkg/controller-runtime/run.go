@@ -11,7 +11,7 @@ import (
 )
 
 type Runtime struct {
-	source, image, imagePullPolicy, config, sshKeySecret string
+	source, image, imagePullPolicy, config, sshKeySecret, homeConfigMap string
 
 	helmX bool
 }
@@ -49,6 +49,13 @@ func Conf(s string) Opt {
 func SSHKeySecret(s string) Opt {
 	return func(r *Runtime) error {
 		r.sshKeySecret = s
+		return nil
+	}
+}
+
+func HomeConfigMap(s string) Opt {
+	return func(r *Runtime) error {
+		r.homeConfigMap = s
 		return nil
 	}
 }
@@ -101,7 +108,7 @@ func Run(name string, resource schema.GroupVersionKind, opt ...Opt) error {
 		return fmt.Errorf("could not create manager: %v", err)
 	}
 
-	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient(), r.source, r.image, r.imagePullPolicy, r.sshKeySecret, r.helmX)
+	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient(), r.source, r.image, r.imagePullPolicy, r.sshKeySecret, r.homeConfigMap, r.helmX)
 	if err != nil {
 		return fmt.Errorf("cloud not create controller config: %v", err)
 	}
