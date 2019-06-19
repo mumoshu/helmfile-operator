@@ -51,7 +51,9 @@ func New(box *packr.Box, opts ...Option) (*Runner, error) {
 		}
 	}
 
-	r.config.fileOrDir = fmt.Sprintf("%s/helmfile.yaml", r.assetsDir)
+	if r.config.fileOrDir == "" {
+		r.config.fileOrDir = fmt.Sprintf("%s/helmfile.yaml", r.assetsDir)
+	}
 
 	syncer, err := apputil.New(
 		apputil.Box(box),
