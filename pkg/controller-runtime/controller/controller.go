@@ -176,7 +176,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 		primaryContainerMounts = append(primaryContainerMounts, home_mount, configmap_home_mount)
 
 		homeInit := map[string]interface{}{
-			"name":  "ssh-key",
+			"name":  "init-home",
 			"image": "busybox:1.31.0",
 			"command": []string{
 				"sh",
@@ -218,7 +218,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 		primaryContainerMounts = append(primaryContainerMounts, dot_ssh_mount)
 
 		dotSshInit := map[string]interface{}{
-			"name":  "ssh-key",
+			"name":  "init-dot-ssh",
 			"image": "busybox:1.31.0",
 			"command": []string{
 				"sh",
