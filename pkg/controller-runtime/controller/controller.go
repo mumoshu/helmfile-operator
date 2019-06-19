@@ -223,9 +223,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			"command": []string{
 				"sh",
 				"-ce",
-				"apk --update add openssh-client",
-				"mkdir -p /root/.ssh && cp /secrets/dot-ssh/id_rsa /root/.ssh/id_rsa && chmod -R 500 /root/.ssh",
-				"ssh-keyscan github.com > /root/.ssh/known_hosts",
+				"apk --update add openssh-client && mkdir -p /root/.ssh && cp /secrets/dot-ssh/id_rsa /root/.ssh/id_rsa && chmod -R 500 /root/.ssh && ssh-keyscan github.com > /root/.ssh/known_hosts",
 			},
 			"volumeMounts": []map[string]interface{}{
 				secret_dot_ssh_mount,
