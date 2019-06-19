@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mumoshu/helmfile-operator/pkg/controller-runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"os"
 )
 
@@ -13,7 +14,12 @@ func main() {
 
 	flag.Parse()
 
-	if err := controller_runtime.Run(*name, *configPath); err != nil {
+	resource := schema.GroupVersionKind{
+		Group:   "apps.mumoshu.github.io",
+		Kind:    "Appliance",
+		Version: "v1alpha1",
+	}
+	if err := controller_runtime.Run(*name, resource, *configPath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

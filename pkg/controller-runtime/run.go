@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"github.com/mumoshu/helmfile-operator/pkg/controller-runtime/controller"
 	config2 "github.com/summerwind/whitebox-controller/config"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	log2 "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-func Run(name string, o ...string) error {
+type Runtime struct {
+	resource schema.GroupVersionKind
+}
+
+
+func Run(name string, resource schema.GroupVersionKind, o ...string) error {
 	log2.SetLogger(log2.ZapLogger(false))
 	log := log2.Log.WithName(name)
 
@@ -43,7 +49,7 @@ func Run(name string, o ...string) error {
 		return fmt.Errorf("could not create manager: %v", err)
 	}
 
-	controllerConfig, err := controller.NewController(name, mgr.GetClient())
+	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient())
 	if err != nil {
 		return fmt.Errorf("cloud not create controller config: %v", err)
 	}

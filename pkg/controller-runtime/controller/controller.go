@@ -12,14 +12,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewController(name string, client client.Client) (*config.ControllerConfig, error) {
+func NewController(name string, resource schema.GroupVersionKind, client client.Client) (*config.ControllerConfig, error) {
 	return &config.ControllerConfig{
 		Name: name,
-		Resource: schema.GroupVersionKind{
-			Group:   "apps.mumoshu.github.io",
-			Kind:    "Appliance",
-			Version: "v1alpha1",
-		},
+		Resource: resource,
 		Dependents: []config.DependentConfig{
 			{
 				GroupVersionKind: schema.GroupVersionKind{

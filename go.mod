@@ -5,13 +5,14 @@ go 1.12
 require (
 	github.com/davidovich/summon v0.7.0
 	github.com/go-logr/logr v0.1.0
-	github.com/gobuffalo/packr/v2 v2.3.1
+	github.com/gobuffalo/packr/v2 v2.3.2
+	github.com/mumoshu/helmfile-operator/pkg/helmfile-applier v0.0.0-20190618024137-7a3a8b54885f // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/roboll/helmfile v0.73.0
+	github.com/roboll/helmfile v0.73.1
 	github.com/spf13/cobra v0.0.4
 	github.com/stefanprodan/k8s-podinfo v1.4.2
 	github.com/summerwind/whitebox-controller v0.5.0
-	go.uber.org/zap v1.9.1
+	go.uber.org/zap v1.10.0
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 	k8s.io/client-go v10.0.0+incompatible
 	k8s.io/klog v0.2.0
