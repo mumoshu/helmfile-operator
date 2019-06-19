@@ -154,42 +154,24 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 
 	if h.homeConfigMap != "" {
 		home_mount := map[string]interface{}{
-			"name": "home",
+			"name":      "home",
 			"mountPath": "/root",
 		}
-		configmap_home_mount := map[string]interface{}{
-			"name":      "configmap-home",
-			"mountPath": "/configmaps/home",
-		}
 		home_volume := map[string]interface{}{
-			"name":     "home",
-			"emptyDir": map[string]interface{}{},
-		}
-		configmap_home_volume := map[string]interface{}{
-			"name": "configmap-home",
+			"name": "home",
 			"configMap": map[string]interface{}{
 				"name": h.homeConfigMap,
+				"items": []map[string]interface{}{
+					map[string]interface{}{
+						"key":  "dot_gitconfig",
+						"path": ".gitconfig",
+					},
+				},
 			},
 		}
 
-		volumes = append(volumes, configmap_home_volume, home_volume)
-		primaryContainerMounts = append(primaryContainerMounts, home_mount, configmap_home_mount)
-
-		homeInit := map[string]interface{}{
-			"name":  "init-home",
-			"image": "busybox:1.31.0",
-			"command": []string{
-				"sh",
-				"-ce",
-				"mkdir -p /root && cp -LR /configmaps/home/* /root/; mv /root/dot_gitconfig /root/.gitconfig || true",
-			},
-			"volumeMounts": []map[string]interface{}{
-				home_mount,
-				configmap_home_mount,
-			},
-		}
-
-		initContainers = append(initContainers, homeInit)
+		volumes = append(volumes, home_volume)
+		primaryContainerMounts = append(primaryContainerMounts, home_mount)
 	}
 
 	if h.sshKeySecret != "" {
