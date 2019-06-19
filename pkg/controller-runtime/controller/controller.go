@@ -152,7 +152,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			"name": "dot-ssh",
 			"secret": map[string]interface{}{
 				"secretName":  h.sshKeySecret,
-				"defaultMode": "500",
+				"defaultMode": 500,
 			},
 		}
 		volumes = append(volumes, volume)
