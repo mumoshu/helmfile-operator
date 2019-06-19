@@ -31,7 +31,7 @@ func main() {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		m := map[string]interface{}{}
-		if err := json.Unmarshal([]byte(valuesJson), m); err != nil {
+		if err := json.Unmarshal([]byte(valuesJson), &m); err != nil {
 			return err
 		}
 
