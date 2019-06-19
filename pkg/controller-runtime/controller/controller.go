@@ -181,7 +181,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			"command": []string{
 				"sh",
 				"-ce",
-				"mkdir -p /root && cp -R /configmaps/home/* /root/",
+				"mkdir -p /root && cp -LR /configmaps/home/* /root/; mv /root/{dot_,}gitconfig || true",
 			},
 			"volumeMounts": []map[string]interface{}{
 				home_mount,
@@ -219,12 +219,13 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 
 		dotSshInit := map[string]interface{}{
 			"name":  "init-dot-ssh",
-			"image": "busybox:1.31.0",
+			"image": "alpine:3.9",
 			"command": []string{
 				"sh",
 				"-ce",
+				"apk --update add openssh-client",
 				"mkdir -p /root/.ssh && cp /secrets/dot-ssh/id_rsa /root/.ssh/id_rsa && chmod -R 500 /root/.ssh",
-				"echo '|1|8rRUGZwlo/0YPw6zFAZ36voA8NI=|YxUMzctEidW22blwxRTJQYX3RvI= ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' > /root/.ssh/known_hosts",
+				"ssh-keyscan github.com > /root/.ssh/known_hosts",
 			},
 			"volumeMounts": []map[string]interface{}{
 				secret_dot_ssh_mount,
