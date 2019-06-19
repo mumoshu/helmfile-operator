@@ -140,23 +140,50 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	}
 
 	volumes := []map[string]interface{}{}
-	volumeMounts := []map[string]interface{}{}
+	primaryContainerMounts := []map[string]interface{}{}
+	initContainers := []map[string]interface{}{}
 
 	if h.sshKeySecret != "" {
-		mount := map[string]interface{}{
-			// TODO
+		dot_ssh_mount := map[string]interface{}{
 			"name":      "dot-ssh",
+			// TODO Use non-root user
 			"mountPath": "/root/.ssh",
 		}
-		volume := map[string]interface{}{
+		secret_dot_ssh_mount := map[string]interface{}{
+			"name":      "secret-dot-ssh",
+			"mountPath": "/secrets/dot-ssh",
+		}
+		dot_ssh_volume := map[string]interface{}{
 			"name": "dot-ssh",
+			"emptyDir": map[string]interface{}{},
+		}
+		secret_dot_ssh_volume := map[string]interface{}{
+			"name": "secret-dot-ssh",
 			"secret": map[string]interface{}{
 				"secretName":  h.sshKeySecret,
-				"defaultMode": 500,
 			},
 		}
-		volumes = append(volumes, volume)
-		volumeMounts = append(volumeMounts, mount)
+
+		volumes = append(volumes, dot_ssh_volume, secret_dot_ssh_volume)
+
+		primaryContainerMounts = append(primaryContainerMounts, dot_ssh_mount)
+
+		initContainer := map[string]interface{}{
+			"name":  "ssh-key",
+			"image": "busybox:1.31.0",
+			"command": []string{
+				"sh",
+				"-ce",
+				"mkdir -p /root/.ssh && cp /secrets/dot-ssh/id_rsa /root/.ssh/id_rsa && chmod -R 500 /root/.ssh",
+				"echo '|1|8rRUGZwlo/0YPw6zFAZ36voA8NI=|YxUMzctEidW22blwxRTJQYX3RvI= ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==' > /root/.ssh/known_hosts",
+			},
+			"volumeMounts": []map[string]interface{}{
+				secret_dot_ssh_mount,
+				dot_ssh_mount,
+			},
+		}
+
+		initContainers = append(initContainers, initContainer)
 	}
 
 	if dependentDeploys == nil || len(dependentDeploys) == 0 {
@@ -197,6 +224,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 								},
 							},
 							"spec": map[string]interface{}{
+								"initContainers": initContainers,
 								"containers": []map[string]interface{}{
 									map[string]interface{}{
 										"name":            "helmfile-applier",
@@ -204,7 +232,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 										"image":           imageTag,
 										"imagePullPolicy": h.imagePullPolicy,
 										"env":             env,
-										"volumeMounts":    volumeMounts,
+										"volumeMounts":    primaryContainerMounts,
 									},
 								},
 								"volumes": volumes,
