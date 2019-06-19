@@ -10,7 +10,12 @@ RUN find /helmfile-applier
 
 RUN ./helmfile-applier -h
 
-FROM quay.io/roboll/helmfile:v0.73.1
+FROM quay.io/roboll/helmfile:v0.79.0
+
+RUN helm plugin install https://github.com/mumoshu/helm-x
+
+# For private git repository access
+RUN apk add --update openssh-client
 
 COPY --from=build /helmfile-applier/helmfile-applier /usr/local/bin/
 

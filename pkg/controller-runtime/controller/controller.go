@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy, sshKeySecret string) (*config.ControllerConfig, error) {
+func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy, sshKeySecret string, helmX bool) (*config.ControllerConfig, error) {
 	if imagePullPolicy == "" {
 		imagePullPolicy = "IfNotPresent"
 	}
@@ -24,6 +24,7 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 		image:           image,
 		imagePullPolicy: imagePullPolicy,
 		sshKeySecret:    sshKeySecret,
+		helmX:           helmX,
 	}
 
 	return &config.ControllerConfig{
@@ -60,6 +61,8 @@ type reconciclingHandler struct {
 	source, image   string
 	imagePullPolicy string
 	sshKeySecret    string
+
+	helmX bool
 }
 
 const DefaultImageTag = "mumoshu/helmfile-applier:dev"
@@ -100,6 +103,10 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	}
 	if source != "" {
 		args = append(args, "--file", source)
+	}
+
+	if h.helmX {
+		args = append(args, "--helm-x")
 	}
 
 	if v, ok := objectSpec["values"]; ok {
@@ -145,7 +152,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 
 	if h.sshKeySecret != "" {
 		dot_ssh_mount := map[string]interface{}{
-			"name":      "dot-ssh",
+			"name": "dot-ssh",
 			// TODO Use non-root user
 			"mountPath": "/root/.ssh",
 		}
@@ -154,13 +161,13 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			"mountPath": "/secrets/dot-ssh",
 		}
 		dot_ssh_volume := map[string]interface{}{
-			"name": "dot-ssh",
+			"name":     "dot-ssh",
 			"emptyDir": map[string]interface{}{},
 		}
 		secret_dot_ssh_volume := map[string]interface{}{
 			"name": "secret-dot-ssh",
 			"secret": map[string]interface{}{
-				"secretName":  h.sshKeySecret,
+				"secretName": h.sshKeySecret,
 			},
 		}
 

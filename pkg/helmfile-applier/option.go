@@ -1,5 +1,11 @@
 package helmfile_applier
 
+import (
+	"fmt"
+	"os/user"
+	"path/filepath"
+)
+
 type Option func(runner *Runner) error
 
 func AssetDir(d string) Option {
@@ -19,6 +25,19 @@ func Source(s string) Option {
 func Once(b bool) Option {
 	return func(r *Runner) error {
 		r.once = b
+		return nil
+	}
+}
+
+func HelmX(b bool) Option {
+	return func(r *Runner) error {
+		if b {
+			usr, err := user.Current()
+			if err != nil {
+				return fmt.Errorf("enabling helm-x integration: %v", err)
+			}
+			r.config.helmBinary = filepath.Join(usr.HomeDir, ".helm/plugins/helm-x/bin/helm-x")
+		}
 		return nil
 	}
 }
