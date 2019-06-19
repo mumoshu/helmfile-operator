@@ -181,7 +181,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 			"command": []string{
 				"sh",
 				"-ce",
-				"mkdir -p /root && cp -LR /configmaps/home/* /root/; mv /root/{dot_,.}gitconfig || true",
+				"mkdir -p /root && cp -LR /configmaps/home/* /root/; mv /root/dot_gitconfig /root/.gitconfig || true",
 			},
 			"volumeMounts": []map[string]interface{}{
 				home_mount,
