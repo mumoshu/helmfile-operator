@@ -29,3 +29,17 @@ func Environment(e string) Option {
 		return nil
 	}
 }
+
+func Values(m map[string]interface{}) Option {
+	return func(r *Runner) error {
+		r.config.set = m
+		return nil
+	}
+}
+
+func ValuesFiles(f []string) Option {
+	return func(r *Runner) error {
+		r.config.vals = f
+		return nil
+	}
+}

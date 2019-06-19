@@ -11,7 +11,7 @@ import (
 )
 
 type Runtime struct {
-	source, image, config string
+	source, image, imagePullPolicy, config string
 }
 
 type Opt func(r *Runtime) error
@@ -22,12 +22,21 @@ func Source(s string) Opt {
 		return nil
 	}
 }
+
 func Image(s string) Opt {
 	return func(r *Runtime) error {
 		r.image = s
 		return nil
 	}
 }
+
+func ImagePullPolicy(s string) Opt {
+	return func(r *Runtime) error {
+		r.imagePullPolicy = s
+		return nil
+	}
+}
+
 func Conf(s string) Opt {
 	return func(r *Runtime) error {
 		r.config = s
@@ -76,7 +85,7 @@ func Run(name string, resource schema.GroupVersionKind, opt ...Opt) error {
 		return fmt.Errorf("could not create manager: %v", err)
 	}
 
-	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient(), r.source, r.image)
+	controllerConfig, err := controller.NewController(name, resource, mgr.GetClient(), r.source, r.image, r.imagePullPolicy)
 	if err != nil {
 		return fmt.Errorf("cloud not create controller config: %v", err)
 	}

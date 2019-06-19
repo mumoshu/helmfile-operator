@@ -12,7 +12,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image string) (*config.ControllerConfig, error) {
+func NewController(name string, resource schema.GroupVersionKind, client client.Client, source, image, imagePullPolicy string) (*config.ControllerConfig, error) {
+	if imagePullPolicy == "" {
+		imagePullPolicy = "IfNotPresent"
+	}
 	return &config.ControllerConfig{
 		Name:     name,
 		Resource: resource,
@@ -29,7 +32,7 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 		Reconciler: &config.ReconcilerConfig{
 			HandlerConfig: config.HandlerConfig{
 				Func: &config.FuncHandlerConfig{
-					Handler: NewReconcilingHandler(name, client, source, image),
+					Handler: NewReconcilingHandler(name, client, source, image, imagePullPolicy),
 				},
 			},
 		},
@@ -42,9 +45,10 @@ func NewController(name string, resource schema.GroupVersionKind, client client.
 }
 
 type reconciclingHandler struct {
-	name          string
-	c             client.Client
-	source, image string
+	name            string
+	c               client.Client
+	source, image   string
+	imagePullPolicy string
 }
 
 const DefaultImageTag = "mumoshu/helmfile-applier:dev"
@@ -87,11 +91,22 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 		args = append(args, "--file", source)
 	}
 
-	var values map[string]interface{}
 	if v, ok := objectSpec["values"]; ok {
-		values = v.(map[string]interface{})
-		for path, val := range values {
-			args = append(args, "--set", fmt.Sprintf("%s=%s", path, val))
+		bytes, err := json.Marshal(v)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, "--values", string(bytes))
+	}
+
+	if v, ok := objectSpec["valuesFiles"]; ok {
+		switch t := v.(type) {
+		case string:
+			args = append(args, "--valuesFiles", t)
+		case interface{}:
+			args = append(args, "--valuesFiles", t.(string))
+		default:
+			return nil, fmt.Errorf("unexpected type of valuesFiles entry: value=%v, type=%T", t, t)
 		}
 	}
 
@@ -156,7 +171,7 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 										"name":            "helmfile-applier",
 										"command":         args,
 										"image":           imageTag,
-										"imagePullPolicy": "IfNotPresent",
+										"imagePullPolicy": h.imagePullPolicy,
 										"env":             env,
 									},
 								},
@@ -204,12 +219,13 @@ func (h *finalizingHandler) Run(buf []byte) ([]byte, error) {
 	return out, nil
 }
 
-func NewReconcilingHandler(name string, c client.Client, source, image string) handler.Handler {
+func NewReconcilingHandler(name string, c client.Client, source, image, imagePullPolicy string) handler.Handler {
 	return &reconciclingHandler{
-		name:   name,
-		c:      c,
-		source: source,
-		image:  image,
+		name:            name,
+		c:               c,
+		source:          source,
+		image:           image,
+		imagePullPolicy: imagePullPolicy,
 	}
 }
 

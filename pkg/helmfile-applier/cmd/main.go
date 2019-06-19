@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/mumoshu/helmfile-operator/pkg/helmfile-applier"
 	"github.com/spf13/cobra"
@@ -19,17 +20,28 @@ func main() {
 	var source string
 	var once bool
 	var environment string
+	var valuesFiles []string
+	var valuesJson string
 
 	flagset.StringVarP(&source, "file", "f", "", "desired state file to be used to reconcile the cluster. currently only helmfile-style state file is supported.")
 	flagset.StringVarP(&environment, "environment", "e", "", "helmfile environment name to be specified for deployments")
+	flagset.StringSliceVar(&valuesFiles, "valuesFile", []string{}, "values files to be passed to helmfile")
+	flagset.StringVar(&valuesJson, "values", "{}", "values to be passed to helmfile, as JSON object")
 	flagset.BoolVar(&once, "once", false, "run once and exit immediately. primarily for testing and development purpose")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		m := map[string]interface{}{}
+		if err := json.Unmarshal([]byte(valuesJson), m); err != nil {
+			return err
+		}
+
 		r, err := helmfile_applier.New(
 			nil,
 			helmfile_applier.Source(source),
 			helmfile_applier.Once(once),
 			helmfile_applier.Environment(environment),
+			helmfile_applier.Values(m),
+			helmfile_applier.ValuesFiles(valuesFiles),
 		)
 		if err != nil {
 			return err

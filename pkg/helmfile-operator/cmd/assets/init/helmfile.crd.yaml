@@ -22,5 +22,7 @@ spec:
               type: string
             values:
               type: object
+            valuesFiles:
+              type: array
             envvars:
               type: object
