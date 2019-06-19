@@ -12,6 +12,8 @@ RUN ./helmfile-applier -h
 
 FROM quay.io/roboll/helmfile:v0.79.0
 
+RUN helm init --client-only
+
 RUN helm plugin install https://github.com/mumoshu/helm-x
 
 # For private git repository access
