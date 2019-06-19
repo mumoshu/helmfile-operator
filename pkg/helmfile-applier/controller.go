@@ -40,7 +40,7 @@ func New(box *packr.Box, opts ...Option) (*Runner, error) {
 		},
 		config: &Config{
 			logger: l,
-			env:    "default",
+			env:    "",
 		},
 		assetsDir: "assets",
 	}
@@ -49,6 +49,10 @@ func New(box *packr.Box, opts ...Option) (*Runner, error) {
 		if err := opts[i](r); err != nil {
 			return nil, err
 		}
+	}
+
+	if r.config.env == "" {
+		r.config.env = "default"
 	}
 
 	if r.config.fileOrDir == "" {
