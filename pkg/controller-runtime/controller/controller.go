@@ -155,7 +155,8 @@ func (h *reconciclingHandler) Run(buf []byte) ([]byte, error) {
 	if h.homeConfigMap != "" {
 		home_mount := map[string]interface{}{
 			"name":      "home",
-			"mountPath": "/root",
+			"mountPath": "/root/.gitconfig",
+			"subPath":   ".gitconfig",
 		}
 		home_volume := map[string]interface{}{
 			"name": "home",
