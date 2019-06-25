@@ -24,7 +24,32 @@ helmfile-operator/run:
 	rm -rf dist/assets
 	go build -o helmfile-operator ./pkg/helmfile-operator && mv helmfile-operator ./dist && cd dist && ./helmfile-operator
 
-build:
+build-all:
 	go build -o helmfile-operator ./pkg/helmfile-operator
 	go build -o controller-runtime ./pkg/controller-runtime/cmd
 	go build -o helmfile-applier ./pkg/helmfile-applier/cmd
+
+packr:
+	cd ./pkg/helmfile-operator
+	packr2 clean
+	packr2
+
+build: packr
+	go build ./pkg/helmfile-operator
+
+indocker-build: packr
+	go build -mod=vendor ./pkg/helmfile-operator
+
+IMAGE ?= mumoshu/helmfile-operator:dev
+
+docker:
+	go mod vendor
+	docker build -t $(IMAGE) .
+	docker tag $(IMAGE) localhost:32000/helmfile-operator:dev
+	docker push localhost:32000/helmfile-operator:dev
+
+docker/run:
+	docker run -it --rm mumoshu/helmfile-operator:dev helmfile-operator
+
+kube/run:
+	kubectl run --generator=run-pod/v1 -it --rm --image-pull-policy Always --image localhost:32000/helmfile-operator:dev helmfile-operator helmfile-operator
